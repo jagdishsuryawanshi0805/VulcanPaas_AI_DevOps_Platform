@@ -1,0 +1,16 @@
+{
+  "title": "Vulcan API RED Metrics",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "API Request Rate",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total[1m])",
+          "legendFormat": "{{method}} {{route}} - {{status}}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 36
+}
