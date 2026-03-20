@@ -1,16 +1,75 @@
 {
-  "title": "Vulcan API RED Metrics",
+  "uid": "vulcan",
+  "id": 1,
+  "title": "VulcanPaaS System Metrics",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m"],
+    "time_options": ["5m", "15m", "1h", "6h", "24h"]
+  },
   "panels": [
     {
+      "id": 1,
       "type": "timeseries",
-      "title": "API Request Rate",
+      "title": "API Request Rate (req/s)",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "gradientMode": "opacity"
+          },
+          "unit": "reqps"
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
       "targets": [
         {
           "expr": "rate(http_requests_total[1m])",
-          "legendFormat": "{{method}} {{route}} - {{status}}"
+          "legendFormat": "{{method}} {{route}} ({{status}})",
+          "datasource": "Prometheus",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Total Requests",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 10 },
+      "targets": [
+        {
+          "expr": "sum(http_requests_total)",
+          "legendFormat": "Total",
+          "datasource": "Prometheus",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Active Req Rate",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 10 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "req/s",
+          "datasource": "Prometheus",
+          "refId": "C"
         }
       ]
     }
-  ],
-  "schemaVersion": 36
+  ]
 }
