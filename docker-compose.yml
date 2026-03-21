@@ -6,14 +6,20 @@ volumes:
   prometheus_data:
   grafana_data:
   vulcan_registry:
+  repos_data:
+  nginx_apps_conf:
 
 services:
   nginx:
+    container_name: vulcanpaas-nginx
     image: nginx:latest
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_apps_conf:/etc/nginx/conf.d/apps
+    extra_hosts:
+      - "host-gateway:host-gateway"
     networks:
       - vulcan-net
     healthcheck:
@@ -42,14 +48,22 @@ services:
       retries: 3
 
   api:
+    container_name: vulcanpaas-api
     build:
       context: ./api
     image: vulcan-api:${IMAGE_TAG:-latest}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/jagdish/Desktop/VulcanPaas_Antigravity:/workspace
+      - repos_data:/workspace/repos
+      - nginx_apps_conf:/workspace/nginx-apps
     environment:
       - PROJECT_PATH=/workspace
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    extra_hosts:
+      - "host-gateway:host-gateway"
     networks:
       - vulcan-net
     healthcheck:

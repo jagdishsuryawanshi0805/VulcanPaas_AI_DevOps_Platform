@@ -1,8 +1,8 @@
 FROM node:20-alpine
 WORKDIR /app
 
-# Install Docker CLI so we can trigger real builds from inside the container
-RUN apk add --no-cache docker-cli docker-compose curl
+# Install Docker CLI and Git so we can trigger real builds from inside the container
+RUN apk add --no-cache docker-cli docker-compose curl git
 
 # Install dependencies
 COPY package*.json ./
