@@ -11,6 +11,57 @@ dotenv.config();
 
 const fastify = Fastify({ logger: true });
 
+// --- Auto Webhook Sync ---
+async function syncGitHubWebhooks() {
+  const token = process.env.GITHUB_TOKEN;
+  const targetUrl = process.env.WEBHOOK_URL;
+  const secret = process.env.GITHUB_WEBHOOK_SECRET;
+  
+  if (!token || !targetUrl) return;
+
+  try {
+    // 1. Get all repos for authenticated user
+    const reposRes = await axios.get('https://api.github.com/user/repos?per_page=100&affiliation=owner,collaborator', {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+
+    for (const repo of reposRes.data) {
+      if (repo.fork || repo.archived) continue;
+
+      // 2. Get existing hooks
+      const hooksRes = await axios.get(repo.hooks_url, {
+        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+      });
+      
+      const exists = hooksRes.data.some((h: any) => h.config.url === targetUrl);
+      
+      if (!exists) {
+        // 3. Create hook
+        await axios.post(repo.hooks_url, {
+          name: 'web',
+          active: true,
+          events: ['push'],
+          config: {
+            url: targetUrl,
+            content_type: 'json',
+            insecure_ssl: '0',
+            secret: secret || ''
+          }
+        }, {
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+        });
+        fastify.log.info(`✅ Auto-injected VulcanPaaS Webhook into repository: ${repo.full_name}`);
+      }
+    }
+  } catch (err: any) {
+    fastify.log.error(`Webhook Auto-Sync failed: ${err.message}`);
+  }
+}
+
+// Run immediately and then every 5 minutes
+syncGitHubWebhooks();
+setInterval(syncGitHubWebhooks, 5 * 60 * 1000);
+
 // --- Prometheus Metrics ---
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });

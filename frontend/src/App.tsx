@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Rocket, Bot, RefreshCw, Undo, Activity, CheckCircle, AlertTriangle, Info, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Rocket, Bot, RefreshCw, Undo, Activity, CheckCircle, AlertTriangle, Info, ShieldCheck, ExternalLink, Server, Cpu, HardDrive } from 'lucide-react';
 
 interface Deployment {
   id: string;
@@ -42,6 +42,7 @@ function PrometheusChart() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
   const [label, setLabel] = useState('Fetching metrics...');
+  const [legend, setLegend] = useState<{color: string, label: string}[]>([]);
 
   const fetchAndDraw = async () => {
     try {
@@ -86,15 +87,20 @@ function PrometheusChart() {
 
       // Plot each series
       const colors = ['#58a6ff', '#3fb950', '#a371f7', '#ff7b72'];
+      const newLegend: {color: string, label: string}[] = [];
+      
       series.forEach((s, si) => {
+        const color = colors[si % colors.length];
+        newLegend.push({ color, label: `${s.metric.method || 'GET'} ${s.metric.route || '/'} (${s.metric.status || '200'})` });
+        
         const pts = s.values.map(([t, v]) => ({
           x: pad.left + ((t - minT) / (maxT - minT || 1)) * (W - pad.left - pad.right),
           y: pad.top + (1 - parseFloat(v) / maxV) * (H - pad.top - pad.bottom)
         }));
-        ctx.strokeStyle = colors[si % colors.length];
+        ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.shadowBlur = 6;
-        ctx.shadowColor = colors[si % colors.length];
+        ctx.shadowColor = color;
         ctx.beginPath();
         pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
         ctx.stroke();
@@ -103,6 +109,7 @@ function PrometheusChart() {
 
       setStatus('ok');
       setLabel(`${series.length} series · ${allPoints.length} data points`);
+      setLegend(newLegend);
     } catch {
       setStatus('error');
       setLabel('Could not reach Prometheus. Is it running?');
@@ -119,6 +126,18 @@ function PrometheusChart() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <canvas ref={canvasRef} width={580} height={240}
         style={{ width: '100%', height: 'auto', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(48,54,61,0.8)' }} />
+      
+      {legend.length > 0 && (
+        <div style={{ background: 'rgba(22,27,34,0.6)', padding: '16px', borderRadius: '6px', border: '1px solid rgba(48,54,61,0.5)', marginTop: '4px' }}>
+          <ul style={{ fontSize: '0.75rem', color: '#8b949e', margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <li><span style={{color: '#58a6ff', fontWeight: 'bold'}}>GET /api/deployments (Blue):</span> Background dashboard traffic constantly polling the server to update UI state.</li>
+            <li><span style={{color: '#3fb950', fontWeight: 'bold'}}>POST /webhook/github (Green):</span> Deployment Automation. Spikes the exact moment a developer pushes code, triggering AI review.</li>
+            <li><span style={{color: '#a371f7', fontWeight: 'bold'}}>POST /.../rollback (Purple):</span> Version Control Tracker. Shows when automated or manual rollback sequences are executed to restore stable state.</li>
+            <li><span style={{color: '#ff7b72', fontWeight: 'bold'}}>Any 5xx Status (Red):</span> System Alerts. Tracks active server crashes, unhandled exceptions, and infrastructure failures in the containers.</li>
+          </ul>
+        </div>
+      )}
+
       <p style={{ fontSize: '0.75rem', color: status === 'error' ? '#ff7b72' : '#8b949e' }}>{label}</p>
     </div>
   );
@@ -209,6 +228,57 @@ export default function App() {
               <ExternalLink size={14} /> Open Full Grafana Dashboard
             </button>
           </a>
+        </div>
+      </div>
+
+      <MockServerMetrics />
+    </div>
+  );
+}
+
+function MockServerMetrics() {
+  const [cpu, setCpu] = useState(15);
+  const [ram, setRam] = useState(4.2);
+  const [net, setNet] = useState(85);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Fluctuates between 10-20% for CPU
+      setCpu(Math.floor(Math.random() * 11) + 10);
+      // Fluctuates slightly around 4GB for RAM
+      setRam(+(4.0 + Math.random() * 0.5).toFixed(1));
+      // Network ping 40-80ms
+      setNet(Math.floor(Math.random() * 40) + 40);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="card metrics-footer">
+      <div className="card-header">
+        <Server size={20} color="#a371f7" />
+        <h2>Live Server Metrics (Local Node Simulator)</h2>
+      </div>
+      <div className="metrics-row">
+        <div className="metric-box">
+          <Cpu size={24} color="#58a6ff" />
+          <div className="metric-value">{cpu}%</div>
+          <div className="metric-label">CPU Usage</div>
+        </div>
+        <div className="metric-box">
+          <HardDrive size={24} color="#3fb950" />
+          <div className="metric-value">{ram} GB</div>
+          <div className="metric-label">RAM (16GB Total)</div>
+        </div>
+        <div className="metric-box">
+          <Activity size={24} color="#ff7b72" />
+          <div className="metric-value">{net} ms</div>
+          <div className="metric-label">Network Latency</div>
+        </div>
+        <div className="metric-box">
+          <Server size={24} color="#d2a8ff" />
+          <div className="metric-value">99.99%</div>
+          <div className="metric-label">Uptime</div>
         </div>
       </div>
     </div>
