@@ -1,13 +1,13 @@
 :root {
-  --bg-color: #0d1117;
-  --panel-bg: rgba(22, 27, 34, 0.65);
-  --border-color: rgba(48, 54, 61, 0.8);
-  --text-main: #c9d1d9;
+  --bg-color: #030509; /* Deep midnight blue */
+  --panel-bg: rgba(9, 14, 25, 0.75);
+  --border-color: rgba(163, 113, 247, 0.2); /* Purple hint */
+  --text-main: #e2e8f0;
   --text-muted: #8b949e;
-  --accent: #58a6ff;
-  --success: #238636;
+  --accent: #a371f7; /* Neon Purple */
+  --success: #3fb950;
   --success-hover: #2ea043;
-  --danger: #da3633;
+  --danger: #ff7b72;
   --danger-hover: #f85149;
 }
 
@@ -20,7 +20,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  background-image: radial-gradient(circle at 50% 0%, rgba(31, 111, 235, 0.12), transparent 50%);
+  background-image: radial-gradient(circle at 50% 0%, rgba(163, 113, 247, 0.15), transparent 50%), radial-gradient(circle at 50% 100%, rgba(248, 162, 92, 0.05), transparent 50%);
 }
 
 .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }

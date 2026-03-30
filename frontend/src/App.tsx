@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Rocket, Bot, RefreshCw, Undo, Activity, CheckCircle, AlertTriangle, Info, ShieldCheck, ExternalLink, Server, Cpu, HardDrive } from 'lucide-react';
+import ChatWidget from './ChatWidget';
 
 interface Deployment {
   id: string;
@@ -167,8 +168,11 @@ export default function App() {
   return (
     <div className="container">
       <header>
-        <h1><Rocket color="#58a6ff" size={32} /> VulcanPaaS</h1>
-        <span style={{ fontSize: '0.875rem', color: '#8b949e' }}>Push → Deepseek V3 Review → Auto-Deploy</span>
+        <h1>
+          <img src="/vulcan-logo.png" alt="Vulcan Logo" style={{ width: 64, height: 64, borderRadius: '50%', boxShadow: '0 0 24px rgba(163, 113, 247, 0.6)', objectFit: 'cover', transition: 'all 0.3s ease' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('style'); }} />
+          <Rocket color="#a371f7" size={32} style={{ display: 'none' }} /> VulcanPaaS
+        </h1>
+        <span style={{ fontSize: '0.85rem', color: '#d2a8ff', background: 'rgba(163, 113, 247, 0.1)', padding: '6px 12px', borderRadius: '12px', border: '1px solid rgba(163, 113, 247, 0.2)' }}>Push → Deepseek V3 Review → Auto-Deploy</span>
       </header>
 
       <div className="grid">
@@ -232,6 +236,7 @@ export default function App() {
       </div>
 
       <MockServerMetrics />
+      <ChatWidget />
     </div>
   );
 }
