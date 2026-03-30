@@ -1,1 +1,0 @@
-This is a second test file to verify if the git credentials are automatically picked up when pushing to the repository.
