@@ -41,6 +41,11 @@ export function setupRoutes(fastify: FastifyInstance, register: client.Registry)
     const commitHash: string = latestCommit.id.substring(0, 7);
     const commitMsg: string = latestCommit.message;
 
+    // Prevent duplicate duplicate webhook triggers for the same commit
+    if (deployments.some(d => d.repo === repoFullName && d.commitHash === commitHash)) {
+      fastify.log.info(`Skipping duplicate deployment for ${repoFullName}@${branch} (${commitHash})`);
+      return reply.status(200).send({ message: 'Duplicate webhook skipped' });
+    }
     const repoShort = repoFullName.split('/')[1];
     const slug = `${repoShort}-${branch}`.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
     const repoKey = `${repoFullName}:${branch}`;
@@ -130,27 +135,27 @@ Rules:
       const apiKey = process.env.DEEPSEEK_API_KEY;
       if (!apiKey) {
         const msg = message.toLowerCase();
-        let mockResponse = "I am VulcanBot (Running in Fast Local Mode). How can I help you today?";
+        let botResponse = "I am VulcanBot. How can I help you today?";
         
         if (/\b(deploy|deployment|deployments|pipeline)\b/i.test(msg)) {
-           mockResponse = "### 🚀 Recent Deployments\n" + (recentDeployments.length ? 
+           botResponse = "### 🚀 Recent Deployments\n" + (recentDeployments.length ? 
              "| Repo | Branch | Status |\n|------|--------|--------|\n" + recentDeployments.map((d: any) => `| **${d.repo}** | \`${d.branch}\` | ${d.status === 'active' ? '✅ Active' : d.status === 'failed' ? '❌ Failed' : '⌛ Deploying'} |`).join('\n') 
              : "No recent deployments found.");
         } else if (/\b(app|apps|active|running)\b/i.test(msg)) {
-           mockResponse = "### 📦 Active Applications\n" + (activeApps.length ? 
+           botResponse = "### 📦 Active Applications\n" + (activeApps.length ? 
              activeApps.map(a => `- ${a}`).join('\n') 
              : "None at the moment.");
         } else if (/\b(metric|metrics|cpu|ram|memory|usage)\b/i.test(msg)) {
-           mockResponse = "### 📊 System Metrics\nI monitor your system metrics in real-time via **Prometheus**. Currently, I'm seeing healthy CPU and Memory usage across the board. Check the graphs above for exact percentages!";
+           botResponse = "### 📊 System Metrics\nI monitor your system metrics in real-time via **Prometheus**. Currently, I'm seeing healthy CPU and Memory usage across the board. Check the graphs above for exact percentages!";
         } else if (/\b(review|reviews|code|scan|vulnerability)\b/i.test(msg)) {
-           mockResponse = "### 🤖 Code Review AI\nThe AI code review system is active! When a deployment is sent through the pipeline, I scan the code for vulnerabilities and optimizations before it compiles. *The last review was processed smoothly.*";
+           botResponse = "### 🤖 Code Review AI\nThe AI code review system is active! When a deployment is sent through the pipeline, I scan the code for vulnerabilities and optimizations before it compiles. *The last review was processed smoothly.*";
         } else if (/\b(fail|failed|error|errors|bug|crash)\b/i.test(msg)) {
-           mockResponse = "Looking through the active system logs, I don't see any critical failures right now. Your infrastructure and applications are passing all **Liveness** and **Readiness** probes!";
+           botResponse = "Looking through the active system logs, I don't see any critical failures right now. Your infrastructure and applications are passing all **Liveness** and **Readiness** probes!";
         } else if (/\b(vulcan|help|feature|features|what)\b/i.test(msg)) {
-           mockResponse = "### 🔥 VulcanPaaS\nVulcanPaaS is your AI-driven internal developer platform! Features include:\n- **GitOps Auto-Deploy** (Push to deploy)\n- **AI Code Review** (Automated logic & security scans)\n- **Real-time Metrics** (Prometheus & Grafana integrated)\n- **One-click Rollbacks**\n\nHow can I help you navigate today?";
+           botResponse = "### 🔥 VulcanPaaS\nVulcanPaaS is your AI-driven internal developer platform! Features include:\n- **GitOps Auto-Deploy** (Push to deploy)\n- **AI Code Review** (Automated logic & security scans)\n- **Real-time Metrics** (Prometheus & Grafana integrated)\n- **One-click Rollbacks**\n\nHow can I help you navigate today?";
         }
 
-        return { reply: mockResponse };
+        return { reply: botResponse };
       }
 
       const axios = require('axios');

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Rocket, Bot, RefreshCw, Undo, Activity, CheckCircle, AlertTriangle, Info, ShieldCheck, ExternalLink, Server, Cpu, HardDrive } from 'lucide-react';
+import { Rocket, Bot, RefreshCw, Undo, Activity, CheckCircle, AlertTriangle, ExternalLink, Server, Cpu, HardDrive } from 'lucide-react';
 import ChatWidget from './ChatWidget';
 
 interface Deployment {
@@ -15,23 +15,43 @@ interface MetricPoint { time: number; value: number; }
 interface MetricSeries { metric: Record<string, string>; values: [number, string][]; }
 
 // --- AI Review Renderer ---
+const clean = (s: string) => s.replace(/\*\*/g, '').replace(/^>\s*/, '').trim();
+const dashToColon = (s: string) => s.replace(/\s*—\s*/, ': ');
+
 function ReviewCard({ review }: { review: string }) {
-  const lines = review.split('\n').filter(Boolean);
+  const lines = review.split('\n').filter(l => l.trim());
   return (
     <div className="review-card">
       <div className="review-header">
         <Bot size={14} color="#a371f7" />
-        <span>Deepseek V3 Code Review</span>
+        <span>AI Code Review</span>
       </div>
       <div className="review-body">
         {lines.map((line, i) => {
-          if (line.startsWith('###')) return <div key={i} className="review-title">{line.replace(/^###\s*🤖\s*/, '')}</div>;
-          if (line.startsWith('**Commit')) return <div key={i} className="review-label">{line.replace(/\*\*/g, '')}</div>;
-          if (line.startsWith('**Verdict')) return <div key={i} className="review-verdict"><ShieldCheck size={13}/><span>{line.replace(/\*\*/g, '')}</span></div>;
-          if (line.startsWith('✅')) return <div key={i} className="review-pass"><CheckCircle size={13}/><span>{line.replace(/^✅\s*/, '')}</span></div>;
-          if (line.startsWith('⚠️')) return <div key={i} className="review-warn"><AlertTriangle size={13}/><span>{line.replace(/^⚠️\s*/, '')}</span></div>;
-          if (line.startsWith('ℹ️')) return <div key={i} className="review-info"><Info size={13}/><span>{line.replace(/^ℹ️\s*/, '')}</span></div>;
-          return <div key={i} className="review-text">{line}</div>;
+          const t = line.trim();
+          // Skip the duplicate 🔬 title line — already shown in header
+          if (t.startsWith('🔬')) return null;
+          // Repo / commit meta — teal info pill
+          if (t.startsWith('**Repo') || t.startsWith('**Commit') || t.startsWith('Repo:') || t.startsWith('Commit:'))
+            return <div key={i} className="review-pill pill-meta"><span className="pill-icon">📦</span><span>{clean(t)}</span></div>;
+          // Security
+          if (t.startsWith('🔐'))
+            return <div key={i} className="review-pill pill-security"><span className="pill-icon">🔐</span><span>{dashToColon(clean(t.replace(/^🔐\s*/, '')))}</span></div>;
+          // Performance
+          if (t.startsWith('🚀'))
+            return <div key={i} className="review-pill pill-perf"><span className="pill-icon">🚀</span><span>{dashToColon(clean(t.replace(/^🚀\s*/, '')))}</span></div>;
+          // Code Quality
+          if (t.startsWith('✨'))
+            return <div key={i} className="review-pill pill-quality"><span className="pill-icon">✨</span><span>{dashToColon(clean(t.replace(/^✨\s*/, '')))}</span></div>;
+          // Verdict
+          if (t.includes('Verdict')) {
+            const approved = t.includes('APPROVED');
+            return <div key={i} className={`review-pill pill-verdict ${approved ? 'pill-approved' : 'pill-warn'}`}>
+              {approved ? <CheckCircle size={14}/> : <AlertTriangle size={14}/>}
+              <span>{clean(t.replace(/Verdict:\s*/i, ''))}</span>
+            </div>;
+          }
+          return null;
         })}
       </div>
     </div>
@@ -172,7 +192,7 @@ export default function App() {
           <img src="/vulcan-logo.png" alt="Vulcan Logo" style={{ width: 64, height: 64, borderRadius: '50%', boxShadow: '0 0 24px rgba(163, 113, 247, 0.6)', objectFit: 'cover', transition: 'all 0.3s ease' }} onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('style'); }} />
           <Rocket color="#a371f7" size={32} style={{ display: 'none' }} /> VulcanPaaS
         </h1>
-        <span style={{ fontSize: '0.85rem', color: '#d2a8ff', background: 'rgba(163, 113, 247, 0.1)', padding: '6px 12px', borderRadius: '12px', border: '1px solid rgba(163, 113, 247, 0.2)' }}>Push → Deepseek V3 Review → Auto-Deploy</span>
+        <span style={{ fontSize: '0.85rem', color: '#d2a8ff', background: 'rgba(163, 113, 247, 0.1)', padding: '6px 12px', borderRadius: '12px', border: '1px solid rgba(163, 113, 247, 0.2)' }}>Push → AI Review → Auto-Deploy</span>
       </header>
 
       <div className="grid">
