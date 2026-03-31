@@ -155,3 +155,14 @@
   0%, 100% { transform: translateY(0); opacity: 0.5; }
   50% { transform: translateY(-4px); opacity: 1; }
 }
+
+/* Markdown Styles */
+.chat-bubble.bot p { margin-top: 0; margin-bottom: 0.5rem; }
+.chat-bubble.bot p:last-child { margin-bottom: 0; }
+.chat-bubble.bot ul, .chat-bubble.bot ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+.chat-bubble.bot code { background: rgba(0,0,0,0.3); padding: 0.1rem 0.3rem; border-radius: 4px; font-family: monospace; color: #a371f7; }
+.chat-bubble.bot pre { background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; }
+.chat-bubble.bot pre code { background: none; padding: 0; color: #e2e8f0; }
+.chat-bubble.bot table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.8rem; }
+.chat-bubble.bot th, .chat-bubble.bot td { border: 1px solid rgba(163, 113, 247, 0.2); padding: 6px 8px; text-align: left; }
+.chat-bubble.bot th { background: rgba(163, 113, 247, 0.1); color: #d2a8ff; font-weight: 600; }

@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, Trash2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './ChatWidget.css';
 
 interface ChatMessage {
@@ -9,9 +11,17 @@ interface ChatMessage {
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'bot', content: 'Hello! I am VulcanBot. Ask me about your deployments, metrics, or AI code reviews.' }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const saved = localStorage.getItem('vulcanbot_chat');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [{ role: 'bot', content: 'Hello! I am VulcanBot. Ask me about your deployments, metrics, or AI code reviews.' }];
+      }
+    }
+    return [{ role: 'bot', content: 'Hello! I am VulcanBot. Ask me about your deployments, metrics, or AI code reviews.' }];
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -22,7 +32,13 @@ export default function ChatWidget() {
 
   useEffect(() => {
     scrollToBottom();
+    localStorage.setItem('vulcanbot_chat', JSON.stringify(messages));
   }, [messages]);
+
+  const clearChat = () => {
+    setMessages([{ role: 'bot', content: 'Hello! I am VulcanBot. Chat history cleared. How can I help you today?' }]);
+    localStorage.removeItem('vulcanbot_chat');
+  };
 
   const sendMessage = async (overrideText?: string) => {
     const userMsg = overrideText || input.trim();
@@ -63,15 +79,26 @@ export default function ChatWidget() {
               <Bot size={20} color="#a371f7" />
               <span>VulcanBot Assistant</span>
             </div>
-            <button className="chat-close" onClick={() => setIsOpen(false)}>
-              <X size={20} color="#8b949e" />
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="chat-close" onClick={clearChat} title="Clear Chat">
+                <Trash2 size={16} color="#8b949e" />
+              </button>
+              <button className="chat-close" onClick={() => setIsOpen(false)} title="Close Chat">
+                <X size={20} color="#8b949e" />
+              </button>
+            </div>
           </div>
 
           <div className="chat-body">
             {messages.map((msg, i) => (
               <div key={i} className={`chat-bubble ${msg.role}`}>
-                {msg.content}
+                {msg.role === 'bot' ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {msg.content}
+                  </ReactMarkdown>
+                ) : (
+                  msg.content
+                )}
               </div>
             ))}
             {loading && (
