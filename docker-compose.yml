@@ -63,6 +63,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - WEBHOOK_URL=${WEBHOOK_URL}
+      - ALLOWED_DOMAINS=${ALLOWED_DOMAINS}
     extra_hosts:
       - "host-gateway:host-gateway"
     networks:

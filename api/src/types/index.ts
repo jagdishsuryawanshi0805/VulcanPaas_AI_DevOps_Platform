@@ -30,3 +30,8 @@ export interface AppEntry {
 }
 
 export type ProjectType = 'dockerfile' | 'react' | 'vite' | 'node' | 'static' | 'unknown';
+
+export interface VulcanConfig {
+  domain?: string;
+  buildCommand?: string;
+}

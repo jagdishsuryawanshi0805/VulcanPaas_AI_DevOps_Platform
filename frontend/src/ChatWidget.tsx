@@ -24,6 +24,9 @@ export default function ChatWidget() {
   });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>(
+    ['List active apps', 'System metrics', 'Recent deployments', 'Code reviews', 'Vulcan features']
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -56,6 +59,9 @@ export default function ChatWidget() {
       });
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'bot', content: data.reply || data.error }]);
+      if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+        setSuggestions(data.suggestions);
+      }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'bot', content: 'Connection error' }]);
     }
@@ -110,12 +116,13 @@ export default function ChatWidget() {
           </div>
 
           <div className="chat-suggestions" style={{ display: 'flex', gap: '8px', padding: '0 12px 12px', overflowX: 'auto', whiteSpace: 'nowrap', borderTop: '1px solid rgba(163, 113, 247, 0.1)', paddingTop: '12px' }}>
-            {["List active apps", "System metrics", "Recent deployments", "Code reviews", "Vulcan features"].map(s => (
+            {suggestions.map(s => (
               <button 
                 key={s} 
                 onClick={() => sendMessage(s)}
-                style={{ background: 'rgba(163, 113, 247, 0.15)', border: '1px solid rgba(163,113,247,0.4)', color: '#d2a8ff', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s' }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(163, 113, 247, 0.3)'}
+                disabled={loading}
+                style={{ background: 'rgba(163, 113, 247, 0.15)', border: '1px solid rgba(163,113,247,0.4)', color: '#d2a8ff', padding: '6px 12px', borderRadius: '16px', fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, transition: 'background 0.2s', opacity: loading ? 0.5 : 1 }}
+                onMouseOver={e => { if (!loading) e.currentTarget.style.background = 'rgba(163, 113, 247, 0.3)'; }}
                 onMouseOut={e => e.currentTarget.style.background = 'rgba(163, 113, 247, 0.15)'}
               >
                 {s}
